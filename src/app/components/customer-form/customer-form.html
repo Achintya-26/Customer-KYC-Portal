@@ -1,0 +1,195 @@
+<div class="customer-form-container">
+  <h1 class="page-title">CUSTOMER INFORMATION</h1>
+
+  <!-- Customer Information Panel -->
+  <div class="form-panel">
+    <div class="panel-header" (click)="togglePanel('customerInfo')">
+      <span class="panel-title">Customer Information</span>
+      <mat-icon class="toggle-icon" [class.expanded]="panels[0].expanded">
+        {{ panels[0].expanded ? 'remove' : 'add' }}
+      </mat-icon>
+    </div>
+    
+    <div class="panel-content" *ngIf="panels[0].expanded" [formGroup]="customerInfoForm">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Surname</mat-label>
+          <input matInput formControlName="surname" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstName" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Date of Birth</mat-label>
+          <input matInput type="date" formControlName="dateOfBirth" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>ID Card No</mat-label>
+          <input matInput formControlName="idCardNo" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Occupation</mat-label>
+          <input matInput formControlName="occupation" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Telephone</mat-label>
+          <input matInput formControlName="telephone" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Mobile</mat-label>
+          <input matInput formControlName="mobile" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" />
+        </mat-form-field>
+      </div>
+      
+      <div class="form-actions">
+        <button mat-raised-button color="primary" (click)="nextStep()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Address Panel -->
+  <div class="form-panel">
+    <div class="panel-header" (click)="togglePanel('address')">
+      <span class="panel-title">Address</span>
+      <mat-icon class="toggle-icon" [class.expanded]="panels[1].expanded">
+        {{ panels[1].expanded ? 'remove' : 'add' }}
+      </mat-icon>
+    </div>
+    
+    <div class="panel-content" *ngIf="panels[1].expanded" [formGroup]="addressForm">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Street Address</mat-label>
+          <input matInput formControlName="streetAddress" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>City</mat-label>
+          <mat-select formControlName="city">
+            <mat-option value="chennai">Chennai</mat-option>
+            <mat-option value="mumbai">Mumbai</mat-option>
+            <mat-option value="bangalore">Bangalore</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>State</mat-label>
+          <mat-select formControlName="state">
+            <mat-option value="tamilnadu">Tamil Nadu</mat-option>
+            <mat-option value="maharashtra">Maharashtra</mat-option>
+            <mat-option value="karnataka">Karnataka</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Postal Code</mat-label>
+          <input matInput formControlName="postalCode" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Country</mat-label>
+          <mat-select formControlName="country">
+            <mat-option value="india">India</mat-option>
+            <mat-option value="usa">USA</mat-option>
+            <mat-option value="uk">UK</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-actions">
+        <button mat-stroked-button (click)="previousStep()">Back</button>
+        <button mat-raised-button color="primary" (click)="nextStep()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Review Panel -->
+  <div class="form-panel">
+    <div class="panel-header" (click)="togglePanel('agentReview')">
+      <span class="panel-title">Agent Review</span>
+      <mat-icon class="toggle-icon" [class.expanded]="panels[2].expanded">
+        {{ panels[2].expanded ? 'remove' : 'add' }}
+      </mat-icon>
+    </div>
+    
+    <div class="panel-content" *ngIf="panels[2].expanded">
+      <div class="review-section">
+        <label class="review-label">Add Review Comments</label>
+        <textarea class="review-textarea" rows="6" placeholder="Enter your review comments here..."></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button mat-stroked-button (click)="previousStep()">Back</button>
+        <button mat-raised-button color="primary" (click)="nextStep()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KYC Documents Panel -->
+  <div class="form-panel">
+    <div class="panel-header" (click)="togglePanel('kycDocuments')">
+      <span class="panel-title">KYC Documents</span>
+      <mat-icon class="toggle-icon" [class.expanded]="panels[3].expanded">
+        {{ panels[3].expanded ? 'remove' : 'add' }}
+      </mat-icon>
+    </div>
+    
+    <div class="panel-content" *ngIf="panels[3].expanded">
+      <div class="documents-section">
+        <div class="upload-section">
+          <div class="upload-area">
+            <mat-icon class="upload-icon">cloud_upload</mat-icon>
+            <p class="upload-text">Drag and Drop files to Upload</p>
+            <p class="upload-or">or</p>
+            <button mat-stroked-button class="browse-btn" (click)="onFileSelected($event)">Browse</button>
+          </div>
+          
+          <button mat-raised-button color="primary" class="upload-btn" (click)="uploadDocument()">
+            Upload Document
+          </button>
+        </div>
+        
+        <div class="uploaded-files" *ngIf="uploadedFiles.length > 0">
+          <h3 class="files-title">Uploaded Files</h3>
+          <div class="file-list">
+            <div class="file-item" *ngFor="let file of uploadedFiles">
+              <mat-icon class="file-icon">description</mat-icon>
+              <span class="file-name">{{ file.name }}</span>
+              <div class="file-actions">
+                <button mat-icon-button (click)="viewFile(file)" class="view-btn">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button mat-icon-button (click)="removeFile(file)" class="delete-btn">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="signature-section">
+          <h3 class="signature-title">Digital Signature</h3>
+          <div class="signature-canvas">
+            <!-- Signature canvas area -->
+          </div>
+          <div class="signature-actions">
+            <button mat-stroked-button (click)="clearSignature()">Clear</button>
+            <button mat-raised-button color="primary" (click)="saveSignature()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

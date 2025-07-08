@@ -1,0 +1,267 @@
+.customer-form-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f5f7fa;
+  min-height: 100vh;
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 30px;
+    text-align: left;
+  }
+
+  .form-panel {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+    overflow: hidden;
+
+    .panel-header {
+      background: #4a90e2;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+
+      &:hover {
+        background: #357abd;
+      }
+
+      .panel-title {
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .toggle-icon {
+        background: white;
+        color: #4a90e2;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: transform 0.3s ease;
+
+        &.expanded {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    .panel-content {
+      padding: 24px;
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+        }
+
+        mat-form-field {
+          width: 100%;
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+
+        button {
+          min-width: 100px;
+        }
+      }
+    }
+  }
+
+  .review-section {
+    .review-label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .review-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+
+      &:focus {
+        outline: none;
+        border-color: #4a90e2;
+      }
+    }
+  }
+
+  .documents-section {
+    .upload-section {
+      margin-bottom: 32px;
+
+      .upload-area {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: #fafafa;
+        margin-bottom: 16px;
+
+        .upload-icon {
+          font-size: 48px;
+          color: #999;
+          margin-bottom: 16px;
+        }
+
+        .upload-text {
+          font-size: 16px;
+          color: #666;
+          margin-bottom: 8px;
+        }
+
+        .upload-or {
+          font-size: 14px;
+          color: #999;
+          margin-bottom: 16px;
+        }
+
+        .browse-btn {
+          background: white;
+          border: 1px solid #ddd;
+          color: #666;
+        }
+      }
+
+      .upload-btn {
+        display: block;
+        margin: 0 auto;
+        min-width: 160px;
+      }
+    }
+
+    .uploaded-files {
+      margin-bottom: 32px;
+
+      .files-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 16px;
+      }
+
+      .file-list {
+        .file-item {
+          display: flex;
+          align-items: center;
+          padding: 12px;
+          background: #e3f2fd;
+          border-radius: 6px;
+          margin-bottom: 8px;
+
+          .file-icon {
+            color: #4a90e2;
+            margin-right: 12px;
+          }
+
+          .file-name {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+          }
+
+          .file-actions {
+            display: flex;
+            gap: 4px;
+
+            .view-btn {
+              color: #4a90e2;
+            }
+
+            .delete-btn {
+              color: #f44336;
+            }
+          }
+        }
+      }
+    }
+
+    .signature-section {
+      .signature-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 16px;
+      }
+
+      .signature-canvas {
+        width: 100%;
+        height: 200px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        margin-bottom: 16px;
+        position: relative;
+
+        &::before {
+          content: 'Digital signature area';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: #999;
+          font-size: 14px;
+        }
+      }
+
+      .signature-actions {
+        display: flex;
+        gap: 12px;
+
+        button {
+          min-width: 80px;
+        }
+      }
+    }
+  }
+}
+
+// Material Design overrides
+::ng-deep {
+  .mat-mdc-form-field {
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  .mat-mdc-outlined-form-field {
+    .mat-mdc-form-field-outline {
+      color: #ddd;
+    }
+
+    &.mat-focused .mat-mdc-form-field-outline {
+      color: #4a90e2;
+    }
+  }
+
+  .mat-mdc-select-panel {
+    max-height: 200px;
+  }
+}

@@ -1,0 +1,110 @@
+<div class="dashboard-container">
+  <div class="header">
+    <h1 class="page-title">DASHBOARD</h1>
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search Customer Details</mat-label>
+      <input matInput />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <div class="stats-cards">
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <mat-icon class="stat-icon">group</mat-icon>
+        <div class="stat-info">
+          <h3 class="stat-title">Assigned Customers</h3>
+          <p class="stat-number">430</p>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <mat-icon class="stat-icon">call</mat-icon>
+        <div class="stat-info">
+          <h3 class="stat-title">Contacted Customers</h3>
+          <p class="stat-number">430</p>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <div class="table-container">
+    <div class="table-header">
+      <h2 class="table-title">Customer Listing</h2>
+      <button mat-stroked-button class="customer-info-btn" (click)="navigateToCustomerForm()">
+        Customer Information
+      </button>
+    </div>
+
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="dataSource" class="customer-table">
+        <!-- First Name Column -->
+        <ng-container matColumnDef="firstName">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">First name</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.firstName}}</td>
+        </ng-container>
+
+        <!-- DOB Column -->
+        <ng-container matColumnDef="dob">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">DOB</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.dob}}</td>
+        </ng-container>
+
+        <!-- ID Card No Column -->
+        <ng-container matColumnDef="idCardNo">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">ID Card No</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.idCardNo}}</td>
+        </ng-container>
+
+        <!-- Occupation Column -->
+        <ng-container matColumnDef="occupation">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">Occupation</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.occupation}}</td>
+        </ng-container>
+
+        <!-- Mobile Column -->
+        <ng-container matColumnDef="mobile">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">Mobile</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.mobile}}</td>
+        </ng-container>
+
+        <!-- Email Column -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">Email</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.email}}</td>
+        </ng-container>
+
+        <!-- City Column -->
+        <ng-container matColumnDef="city">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">City</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.city}}</td>
+        </ng-container>
+
+        <!-- State Column -->
+        <ng-container matColumnDef="state">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">State</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.state}}</td>
+        </ng-container>
+
+        <!-- Country Column -->
+        <ng-container matColumnDef="country">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">Country</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.country}}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table-header-row"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+      </table>
+    </div>
+
+    <mat-paginator 
+      [length]="100" 
+      [pageSize]="8" 
+      [pageSizeOptions]="[5, 8, 10, 25]"
+      showFirstLastButtons
+      class="table-paginator">
+    </mat-paginator>
+  </div>
+</div>
