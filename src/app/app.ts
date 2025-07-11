@@ -9,5 +9,5 @@ import { Topbar } from './components/shared/topbar/topbar';
   styleUrl: './app.scss'
 })
 export class App {
-  protected title = 'Frontend';
+  protected title = 'Customer KYC';
 }
