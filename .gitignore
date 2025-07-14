@@ -40,3 +40,10 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# backend
+backend/node_modules
+backend/uploads
+backend/.env
+backend/test-signature-blob.js
+backend/test-signature-output.png
