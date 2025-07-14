@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
@@ -77,20 +77,29 @@ interface UserInfoResponse {
   templateUrl: './customer-form.html',
   styleUrl: './customer-form.scss'
 })
-export class CustomerForm {
+export class CustomerForm implements AfterViewInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
+  @ViewChild('signatureCanvas', { static: false }) signatureCanvas!: ElementRef<HTMLCanvasElement>;
   
   currentStep = 0;
   totalSteps = 4;
   isLoadingUserInfo = false;
+  isSubmitting = false;
   
   customerInfoForm: FormGroup;
   addressForm: FormGroup;
+  agentReviewForm: FormGroup;
   
   uploadedFiles: UploadedFile[] = [];
   
   isDragOver = false;
   selectedFile: UploadedFile | null = null;
+  
+  // Signature canvas properties
+  isDrawing = false;
+  signatureDataUrl = '';
+  signatureBlob: Blob | null = null;
+  ctx!: CanvasRenderingContext2D;
   
   panels = [
     { id: 'customerInfo', title: 'Customer Information', expanded: true },
@@ -125,6 +134,10 @@ export class CustomerForm {
       country: ['', Validators.required]
     });
 
+    this.agentReviewForm = this.fb.group({
+      reviewComments: ['', Validators.required]
+    });
+
     // Listen for changes to idCardNo field
     this.customerInfoForm.get('idCardNo')?.valueChanges
       .pipe(
@@ -136,6 +149,22 @@ export class CustomerForm {
           this.fetchUserInfo(idCardNo.trim());
         }
       });
+  }
+
+  ngAfterViewInit() {
+    // Initialize canvas when view is ready
+    setTimeout(() => {
+      if (this.signatureCanvas) {
+        this.initCanvas();
+      }
+    }, 100);
+    
+    // Re-initialize canvas on window resize to maintain proper scaling
+    window.addEventListener('resize', () => {
+      if (this.signatureCanvas) {
+        setTimeout(() => this.initCanvas(), 100);
+      }
+    });
   }
 
   togglePanel(panelId: string) {
@@ -259,11 +288,6 @@ export class CustomerForm {
     this.uploadedFiles = this.uploadedFiles.filter(f => f.id !== file.id);
   }
 
-  uploadDocument() {
-    // Handle document upload to server
-    console.log('Uploading documents:', this.uploadedFiles);
-  }
-
   viewFile(file: UploadedFile) {
     this.selectedFile = file;
   }
@@ -299,11 +323,245 @@ export class CustomerForm {
   }
 
   clearSignature() {
-    // Handle clear signature
+    if (this.ctx && this.signatureCanvas) {
+      const canvas = this.signatureCanvas.nativeElement;
+      this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Redraw the white background
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      this.signatureDataUrl = '';
+      this.signatureBlob = null;
+    }
   }
 
   saveSignature() {
-    // Handle save signature
+    if (this.signatureCanvas) {
+      const canvas = this.signatureCanvas.nativeElement;
+      this.signatureDataUrl = canvas.toDataURL('image/png');
+      
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        this.signatureBlob = blob;
+        this.snackBar.open('Signature saved successfully', 'Close', {
+          duration: 3000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      }, 'image/png');
+    }
+  }
+
+  // Signature canvas event handlers
+  initCanvas() {
+    const canvas = this.signatureCanvas.nativeElement;
+    this.ctx = canvas.getContext('2d')!;
+    
+    // Set canvas size to match the display size
+    const rect = canvas.getBoundingClientRect();
+    const displayWidth = rect.width;
+    const displayHeight = rect.height;
+    
+    // Set the internal size to match the display size for crisp drawing
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+    
+    // Set drawing properties
+    this.ctx.lineWidth = 2;
+    this.ctx.lineCap = 'round';
+    this.ctx.lineJoin = 'round';
+    this.ctx.strokeStyle = '#000000';
+    
+    // Set background
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  private getCanvasCoordinates(clientX: number, clientY: number): { x: number, y: number } {
+    const canvas = this.signatureCanvas.nativeElement;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculate the scale factor between canvas size and display size
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    // Get coordinates relative to canvas and scale them
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    
+    return { x, y };
+  }
+
+  startDrawing(event: MouseEvent) {
+    this.isDrawing = true;
+    const coords = this.getCanvasCoordinates(event.clientX, event.clientY);
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(coords.x, coords.y);
+  }
+
+  draw(event: MouseEvent) {
+    if (!this.isDrawing) return;
+    
+    const coords = this.getCanvasCoordinates(event.clientX, event.clientY);
+    
+    this.ctx.lineTo(coords.x, coords.y);
+    this.ctx.stroke();
+  }
+
+  stopDrawing() {
+    this.isDrawing = false;
+    this.ctx.closePath();
+  }
+
+  // Touch events for mobile/tablet support
+  startDrawingTouch(event: TouchEvent) {
+    event.preventDefault();
+    this.isDrawing = true;
+    const coords = this.getCanvasCoordinates(
+      event.touches[0].clientX, 
+      event.touches[0].clientY
+    );
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(coords.x, coords.y);
+  }
+
+  drawTouch(event: TouchEvent) {
+    event.preventDefault();
+    if (!this.isDrawing) return;
+    
+    const coords = this.getCanvasCoordinates(
+      event.touches[0].clientX, 
+      event.touches[0].clientY
+    );
+    
+    this.ctx.lineTo(coords.x, coords.y);
+    this.ctx.stroke();
+  }
+
+  stopDrawingTouch(event: TouchEvent) {
+    event.preventDefault();
+    this.isDrawing = false;
+    this.ctx.closePath();
+  }
+
+  // Submit all form data
+  async submitAllData() {
+    if (!this.isFormValid()) {
+      this.snackBar.open('Please fill all required fields', 'Close', {
+        duration: 3000,
+        horizontalPosition: 'right',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    try {
+      const formData = this.prepareFormData();
+      await this.saveToDatabase(formData);
+      
+      this.snackBar.open('Customer data saved successfully!', 'Close', {
+        duration: 3000,
+        horizontalPosition: 'right',
+        verticalPosition: 'top'
+      });
+      
+      // Reset forms after successful submission
+      this.resetAllForms();
+      
+    } catch (error) {
+      console.error('Error submitting data:', error);
+      this.snackBar.open('Failed to save customer data', 'Close', {
+        duration: 3000,
+        horizontalPosition: 'right',
+        verticalPosition: 'top'
+      });
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  private isFormValid(): boolean {
+    return this.customerInfoForm.valid && 
+           this.addressForm.valid && 
+           this.agentReviewForm.valid &&
+           this.signatureBlob !== null;
+  }
+
+  private prepareFormData(): FormData {
+    const customerInfo = this.customerInfoForm.value;
+    const address = this.addressForm.value;
+    const agentReview = this.agentReviewForm.value;
+    
+    const formData = new FormData();
+    
+    // Customer Information
+    formData.append('idCardNo', customerInfo.idCardNo);
+    formData.append('surname', customerInfo.surname);
+    formData.append('firstName', customerInfo.firstName);
+    formData.append('dateOfBirth', customerInfo.dateOfBirth);
+    formData.append('occupation', customerInfo.occupation);
+    formData.append('telephone', customerInfo.telephone);
+    formData.append('mobile', customerInfo.mobile);
+    formData.append('email', customerInfo.email);
+    
+    // Address Information
+    formData.append('streetAddress', address.streetAddress);
+    formData.append('city', address.city);
+    formData.append('state', address.state);
+    formData.append('postalCode', address.postalCode);
+    formData.append('country', address.country);
+    
+    // Agent Review
+    formData.append('reviewComments', agentReview.reviewComments);
+    
+    // KYC Documents - append each file
+    this.uploadedFiles.forEach((uploadedFile, index) => {
+      formData.append(`documents`, uploadedFile.file, uploadedFile.name);
+    });
+    
+    // Digital Signature - append as blob
+    if (this.signatureBlob) {
+      formData.append('signature', this.signatureBlob, 'signature.png');
+    }
+    
+    // Metadata
+    formData.append('submissionDate', new Date().toISOString());
+    formData.append('status', 'pending');
+    
+    return formData;
+  }
+
+  private async saveToDatabase(data: FormData): Promise<void> {
+    const apiUrl = 'http://localhost:3000/api/customer-kyc'; // Backend API endpoint with proper protocol
+    
+    return new Promise((resolve, reject) => {
+      this.http.post(apiUrl, data).subscribe({
+        next: (response) => {
+          console.log('Data saved successfully:', response);
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error saving data:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  private resetAllForms() {
+    this.customerInfoForm.reset();
+    this.addressForm.reset();
+    this.agentReviewForm.reset();
+    this.uploadedFiles = [];
+    this.clearSignature();
+    this.currentStep = 0;
+    this.updatePanelVisibility();
+    this.panels[0].expanded = true;
   }
 
   fetchUserInfo(idCardNo: string) {

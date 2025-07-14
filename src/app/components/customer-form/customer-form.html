@@ -131,10 +131,17 @@
       </mat-icon>
     </div>
 
-    <div class="panel-content" *ngIf="panels[2].expanded">
+    <div class="panel-content" *ngIf="panels[2].expanded" [formGroup]="agentReviewForm">
       <div class="review-section">
-        <label class="review-label">Add Review Comments</label>
-        <textarea class="review-textarea" rows="6" placeholder="Enter your review comments here..."></textarea>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Add Review Comments</mat-label>
+          <textarea 
+            matInput 
+            formControlName="reviewComments" 
+            rows="6" 
+            placeholder="Enter your review comments here...">
+          </textarea>
+        </mat-form-field>
       </div>
 
       <div class="form-actions">
@@ -165,10 +172,6 @@
             <input #fileInput type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
               (change)="onFileSelected($event)" style="display: none;">
           </div>
-
-          <button mat-raised-button color="primary" class="upload-btn" (click)="uploadDocument()">
-            Upload Document
-          </button>
         </div>
 
         <div class="uploaded-files" *ngIf="uploadedFiles.length > 0">
@@ -197,13 +200,38 @@
 
         <div class="signature-section">
           <h3 class="signature-title">Digital Signature</h3>
-          <div class="signature-canvas">
-            <!-- Signature canvas area -->
+          <div class="signature-canvas-container">
+            <canvas 
+              #signatureCanvas
+              class="signature-canvas"
+              (mousedown)="startDrawing($event)"
+              (mousemove)="draw($event)"
+              (mouseup)="stopDrawing()"
+              (mouseleave)="stopDrawing()"
+              (touchstart)="startDrawingTouch($event)"
+              (touchmove)="drawTouch($event)"
+              (touchend)="stopDrawingTouch($event)"
+              (touchcancel)="stopDrawingTouch($event)">
+            </canvas>
+            <p class="signature-instruction">Please sign above using your mouse or stylus</p>
           </div>
           <div class="signature-actions">
             <button mat-stroked-button (click)="clearSignature()">Clear</button>
-            <button mat-raised-button color="primary" (click)="saveSignature()">Save</button>
+            <button mat-raised-button color="primary" (click)="saveSignature()">Save Signature</button>
           </div>
+        </div>
+
+        <div class="form-actions final-actions">
+          <button mat-stroked-button (click)="previousStep()">Back</button>
+          <button 
+            mat-raised-button 
+            color="accent" 
+            class="submit-btn"
+            (click)="submitAllData()"
+            [disabled]="isSubmitting">
+            <mat-icon *ngIf="isSubmitting">hourglass_empty</mat-icon>
+            {{ isSubmitting ? 'Submitting...' : 'Submit All Data' }}
+          </button>
         </div>
       </div>
     </div>
