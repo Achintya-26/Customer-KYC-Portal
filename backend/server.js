@@ -425,6 +425,7 @@ app.get('/api/customer-kyc', async (req, res) => {
       SELECT 
         id, id_card_no, 
         CONCAT(first_name, ' ', surname) as full_name,
+        date_of_birth, occupation,
         email, mobile, city, country, status,
         submission_date, created_at,
         CASE WHEN signature_filename IS NOT NULL THEN true ELSE false END as has_signature

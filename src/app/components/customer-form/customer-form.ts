@@ -14,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { findIndex } from 'rxjs';
@@ -72,6 +73,7 @@ interface UserInfoResponse {
     MatDialogModule,
     MatTooltipModule,
     MatSnackBarModule,
+    MatProgressSpinnerModule,
     CommonModule
   ],
   templateUrl: './customer-form.html',
@@ -84,6 +86,7 @@ export class CustomerForm implements AfterViewInit {
   currentStep = 0;
   totalSteps = 4;
   isLoadingUserInfo = false;
+  userInfoFetchStatus: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   isSubmitting = false;
   
   customerInfoForm: FormGroup;
@@ -99,7 +102,7 @@ export class CustomerForm implements AfterViewInit {
   isDrawing = false;
   signatureDataUrl = '';
   signatureBlob: Blob | null = null;
-  ctx!: CanvasRenderingContext2D;
+  ctx: CanvasRenderingContext2D | null = null;
   
   panels = [
     { id: 'customerInfo', title: 'Customer Information', expanded: true },
@@ -145,26 +148,44 @@ export class CustomerForm implements AfterViewInit {
         distinctUntilChanged() // Only emit when the value actually changes
       )
       .subscribe(idCardNo => {
-        if (idCardNo && idCardNo.trim().length >= 3) { // Minimum 3 characters
+        if (idCardNo && idCardNo.trim().length >= 4) { // Minimum 4 characters
           this.fetchUserInfo(idCardNo.trim());
         }
       });
   }
 
   ngAfterViewInit() {
-    // Initialize canvas when view is ready
-    setTimeout(() => {
-      if (this.signatureCanvas) {
-        this.initCanvas();
-      }
-    }, 100);
+    // Initialize canvas when view is ready - use multiple attempts to ensure canvas is available
+    this.initCanvasWithRetry();
     
     // Re-initialize canvas on window resize to maintain proper scaling
     window.addEventListener('resize', () => {
-      if (this.signatureCanvas) {
+      if (this.signatureCanvas && this.ctx) {
         setTimeout(() => this.initCanvas(), 100);
       }
     });
+  }
+
+  private initCanvasWithRetry(attempts: number = 0) {
+    const maxAttempts = 5;
+    
+    if (attempts >= maxAttempts) {
+      console.error('Failed to initialize canvas after multiple attempts');
+      return;
+    }
+    
+    if (this.signatureCanvas) {
+      this.initCanvas();
+      if (this.ctx) {
+        console.log('Canvas initialized successfully');
+        return;
+      }
+    }
+    
+    // Try again after a short delay
+    setTimeout(() => {
+      this.initCanvasWithRetry(attempts + 1);
+    }, 100 * (attempts + 1)); // Increasing delay
   }
 
   togglePanel(panelId: string) {
@@ -355,8 +376,18 @@ export class CustomerForm implements AfterViewInit {
 
   // Signature canvas event handlers
   initCanvas() {
+    if (!this.signatureCanvas) {
+      console.warn('Signature canvas not available yet');
+      return;
+    }
+    
     const canvas = this.signatureCanvas.nativeElement;
-    this.ctx = canvas.getContext('2d')!;
+    this.ctx = canvas.getContext('2d');
+    
+    if (!this.ctx) {
+      console.error('Could not get canvas context');
+      return;
+    }
     
     // Set canvas size to match the display size
     const rect = canvas.getBoundingClientRect();
@@ -379,6 +410,10 @@ export class CustomerForm implements AfterViewInit {
   }
 
   private getCanvasCoordinates(clientX: number, clientY: number): { x: number, y: number } {
+    if (!this.signatureCanvas) {
+      return { x: 0, y: 0 };
+    }
+    
     const canvas = this.signatureCanvas.nativeElement;
     const rect = canvas.getBoundingClientRect();
     
@@ -394,6 +429,11 @@ export class CustomerForm implements AfterViewInit {
   }
 
   startDrawing(event: MouseEvent) {
+    if (!this.ctx || !this.signatureCanvas) {
+      this.initCanvas();
+    }
+    if (!this.ctx) return;
+    
     this.isDrawing = true;
     const coords = this.getCanvasCoordinates(event.clientX, event.clientY);
     
@@ -402,7 +442,7 @@ export class CustomerForm implements AfterViewInit {
   }
 
   draw(event: MouseEvent) {
-    if (!this.isDrawing) return;
+    if (!this.isDrawing || !this.ctx) return;
     
     const coords = this.getCanvasCoordinates(event.clientX, event.clientY);
     
@@ -411,6 +451,8 @@ export class CustomerForm implements AfterViewInit {
   }
 
   stopDrawing() {
+    if (!this.ctx) return;
+    
     this.isDrawing = false;
     this.ctx.closePath();
   }
@@ -418,6 +460,11 @@ export class CustomerForm implements AfterViewInit {
   // Touch events for mobile/tablet support
   startDrawingTouch(event: TouchEvent) {
     event.preventDefault();
+    if (!this.ctx || !this.signatureCanvas) {
+      this.initCanvas();
+    }
+    if (!this.ctx) return;
+    
     this.isDrawing = true;
     const coords = this.getCanvasCoordinates(
       event.touches[0].clientX, 
@@ -430,7 +477,7 @@ export class CustomerForm implements AfterViewInit {
 
   drawTouch(event: TouchEvent) {
     event.preventDefault();
-    if (!this.isDrawing) return;
+    if (!this.isDrawing || !this.ctx) return;
     
     const coords = this.getCanvasCoordinates(
       event.touches[0].clientX, 
@@ -443,6 +490,8 @@ export class CustomerForm implements AfterViewInit {
 
   stopDrawingTouch(event: TouchEvent) {
     event.preventDefault();
+    if (!this.ctx) return;
+    
     this.isDrawing = false;
     this.ctx.closePath();
   }
@@ -568,11 +617,13 @@ export class CustomerForm implements AfterViewInit {
     const apiUrl = `https://gipasdmssvr.nicl.mu:8050/NICGeneralServices/userinfo?userId=${idCardNo}`;
     
     this.isLoadingUserInfo = true;
+    this.userInfoFetchStatus = 'loading';
     
     this.http.get<UserInfoResponse>(apiUrl).subscribe({
       next: (response) => {
         this.isLoadingUserInfo = false;
         if (response.responseType === 'SUCCESS') {
+          this.userInfoFetchStatus = 'success';
           this.autoFillFormFields(response.responseBody);
           this.snackBar.open('User information loaded successfully', 'Close', {
             duration: 3000,
@@ -580,21 +631,33 @@ export class CustomerForm implements AfterViewInit {
             verticalPosition: 'top'
           });
         } else {
+          this.userInfoFetchStatus = 'error';
           this.snackBar.open('User not found', 'Close', {
             duration: 3000,
             horizontalPosition: 'right',
             verticalPosition: 'top'
           });
         }
+        
+        // Reset status after 3 seconds
+        setTimeout(() => {
+          this.userInfoFetchStatus = 'idle';
+        }, 3000);
       },
       error: (error) => {
         this.isLoadingUserInfo = false;
+        this.userInfoFetchStatus = 'error';
         console.error('Error fetching user info:', error);
         this.snackBar.open('Failed to fetch user information', 'Close', {
           duration: 3000,
           horizontalPosition: 'right',
           verticalPosition: 'top'
         });
+        
+        // Reset status after 3 seconds
+        setTimeout(() => {
+          this.userInfoFetchStatus = 'idle';
+        }, 3000);
       }
     });
   }

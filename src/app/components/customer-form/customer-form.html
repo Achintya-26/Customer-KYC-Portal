@@ -1,5 +1,20 @@
 <div class="customer-form-container">
-  <h1 class="page-title">CUSTOMER INFORMATION</h1>
+  <!-- Full screen loading overlay for user info fetch -->
+  <div class="full-screen-loading-overlay" *ngIf="isLoadingUserInfo">
+    <div class="full-screen-loading-content">
+      <mat-spinner diameter="60"></mat-spinner>
+      <h3>Fetching Customer Information</h3>
+      <p>Please wait while we retrieve the customer details from the system...</p>
+      <div class="loading-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-content" [class.blur-background]="isLoadingUserInfo">
+    <h1 class="page-title">CUSTOMER INFORMATION</h1>
 
   <!-- Customer Information Panel -->
   <div class="form-panel">
@@ -12,11 +27,27 @@
 
     <div class="panel-content" *ngIf="panels[0].expanded" [formGroup]="customerInfoForm">
       <div class="form-grid">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="id-card-field">
           <mat-label>ID Card No</mat-label>
-          <input matInput formControlName="idCardNo" />
-          <mat-hint *ngIf="isLoadingUserInfo">Fetching user information...</mat-hint>
-          <mat-icon matSuffix *ngIf="isLoadingUserInfo">refresh</mat-icon>
+          <input matInput formControlName="idCardNo" placeholder="Enter ID Card Number" />
+          <mat-hint *ngIf="isLoadingUserInfo" class="loading-hint">
+            <mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
+            Fetching user information...
+          </mat-hint>
+          <mat-hint *ngIf="userInfoFetchStatus === 'success'" class="success-hint">
+            <mat-icon class="success-icon">check_circle</mat-icon>
+            User information loaded successfully
+          </mat-hint>
+          <mat-hint *ngIf="userInfoFetchStatus === 'error'" class="error-hint">
+            <mat-icon class="error-icon">error</mat-icon>
+            Failed to load user information
+          </mat-hint>
+          
+          <!-- Suffix icons -->
+          <mat-icon matSuffix *ngIf="userInfoFetchStatus === 'idle'">badge</mat-icon>
+          <mat-spinner matSuffix *ngIf="isLoadingUserInfo" diameter="20"></mat-spinner>
+          <mat-icon matSuffix *ngIf="userInfoFetchStatus === 'success'" class="success-icon">check_circle</mat-icon>
+          <mat-icon matSuffix *ngIf="userInfoFetchStatus === 'error'" class="error-icon">error</mat-icon>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Surname</mat-label>
@@ -277,4 +308,5 @@
       </div>
     </div>
   </div>
-</div>
+  </div> <!-- Close form-content -->
+</div> <!-- Close customer-form-container -->

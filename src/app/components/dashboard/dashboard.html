@@ -14,7 +14,10 @@
         <mat-icon class="stat-icon">group</mat-icon>
         <div class="stat-info">
           <h3 class="stat-title">Assigned Customers</h3>
-          <p class="stat-number">430</p>
+          <p class="stat-number">
+            <span *ngIf="!isLoadingStats">{{ assignedCustomersCount }}</span>
+            <mat-spinner *ngIf="isLoadingStats" diameter="20"></mat-spinner>
+          </p>
         </div>
       </div>
     </mat-card>
@@ -24,7 +27,10 @@
         <mat-icon class="stat-icon">call</mat-icon>
         <div class="stat-info">
           <h3 class="stat-title">Contacted Customers</h3>
-          <p class="stat-number">430</p>
+          <p class="stat-number">
+            <span *ngIf="!isLoadingStats">{{ contactedCustomersCount }}</span>
+            <mat-spinner *ngIf="isLoadingStats" diameter="20"></mat-spinner>
+          </p>
         </div>
       </div>
     </mat-card>
@@ -33,29 +39,34 @@
   <div class="table-container">
     <div class="table-header">
       <h2 class="table-title">Customer Listing</h2>
-      <button mat-stroked-button class="customer-info-btn" (click)="navigateToCustomerForm()">
-        Customer Information
-      </button>
+      <div class="table-actions">
+        <button mat-icon-button (click)="refreshData()" title="Refresh">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button mat-stroked-button class="customer-info-btn" (click)="navigateToCustomerForm()">
+          Customer Information
+        </button>
+      </div>
     </div>
 
-    <div class="table-wrapper">
+    <div class="table-wrapper" *ngIf="!isLoadingTable">
       <table mat-table [dataSource]="dataSource" class="customer-table">
-        <!-- First Name Column -->
-        <ng-container matColumnDef="firstName">
-          <th mat-header-cell *matHeaderCellDef class="table-header-cell">First name</th>
-          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.firstName}}</td>
+        <!-- Full Name Column -->
+        <ng-container matColumnDef="full_name">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">Full Name</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.full_name}}</td>
         </ng-container>
 
         <!-- DOB Column -->
-        <ng-container matColumnDef="dob">
+        <ng-container matColumnDef="date_of_birth">
           <th mat-header-cell *matHeaderCellDef class="table-header-cell">DOB</th>
-          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.dob}}</td>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.date_of_birth}}</td>
         </ng-container>
 
         <!-- ID Card No Column -->
-        <ng-container matColumnDef="idCardNo">
+        <ng-container matColumnDef="id_card_no">
           <th mat-header-cell *matHeaderCellDef class="table-header-cell">ID Card No</th>
-          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.idCardNo}}</td>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.id_card_no}}</td>
         </ng-container>
 
         <!-- Occupation Column -->
@@ -82,16 +93,26 @@
           <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.city}}</td>
         </ng-container>
 
-        <!-- State Column -->
-        <ng-container matColumnDef="state">
-          <th mat-header-cell *matHeaderCellDef class="table-header-cell">State</th>
-          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.state}}</td>
-        </ng-container>
-
         <!-- Country Column -->
         <ng-container matColumnDef="country">
           <th mat-header-cell *matHeaderCellDef class="table-header-cell">Country</th>
           <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.country}}</td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">Status</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">
+            <span class="status-badge" [ngClass]="'status-' + customer.status">
+              {{customer.status | titlecase}}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Submission Date Column -->
+        <ng-container matColumnDef="submission_date">
+          <th mat-header-cell *matHeaderCellDef class="table-header-cell">Submission Date</th>
+          <td mat-cell *matCellDef="let customer" class="table-cell">{{customer.submission_date}}</td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table-header-row"></tr>
@@ -99,8 +120,25 @@
       </table>
     </div>
 
+    <!-- Loading state for table -->
+    <div class="loading-container" *ngIf="isLoadingTable">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading customer data...</p>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="!isLoadingTable && dataSource.length === 0">
+      <mat-icon class="empty-icon">people_outline</mat-icon>
+      <h3>No customers found</h3>
+      <p>No customer KYC records available. Start by adding new customer information.</p>
+      <button mat-stroked-button (click)="navigateToCustomerForm()">
+        Add First Customer
+      </button>
+    </div>
+
     <mat-paginator 
-      [length]="100" 
+      *ngIf="!isLoadingTable && dataSource.length > 0"
+      [length]="dataSource.length" 
       [pageSize]="8" 
       [pageSizeOptions]="[5, 8, 10, 25]"
       showFirstLastButtons
